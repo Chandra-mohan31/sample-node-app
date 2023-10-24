@@ -1,0 +1,40 @@
+pipeline {
+    environment {
+    registry = "31052007/sample-node-app"
+    registryCredential = 'dockerhubcredentials'
+    dockerImage = ''
+    }
+
+    agent any
+    stages {
+            stage('Cloning our Git') {
+                steps {
+                git branch: 'main', credentialsId: 'github', url: 'https://github.com/Chandra-mohan31/sample-node-app'
+                }
+            }
+
+            stage('Building Docker Image') {
+                steps {
+                    script {
+                        dockerImage = docker.build registry
+                    }
+                }
+            }
+
+            stage('Deploying Docker Image to Dockerhub') {
+                steps {
+                    script {
+                        docker.withRegistry('', registryCredential) {
+                        dockerImage.push()
+                        }
+                    }
+                }
+            }
+
+            stage('Cleaning Up') {
+                steps{
+                  sh "docker rmi --force $registry"
+                }
+            }
+        }
+    }
